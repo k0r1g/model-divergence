@@ -3,12 +3,8 @@ import argparse
 import random
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 from transformers import (
     default_data_collator,
-    get_scheduler,
-    AutoTokenizer, 
-    AutoProcessor,
     TrainingArguments,
     Trainer
 )
