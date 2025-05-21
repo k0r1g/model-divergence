@@ -1,0 +1,15 @@
+{"time":"2025-05-21T16:03:57.038194465Z","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/root/model-divergence/wandb/run-20250521_160357-zvio55gv/logs/debug-core.log"}
+{"time":"2025-05-21T16:03:57.350741698Z","level":"INFO","msg":"created new stream","id":"zvio55gv"}
+{"time":"2025-05-21T16:03:57.350845564Z","level":"INFO","msg":"stream: started","id":"zvio55gv"}
+{"time":"2025-05-21T16:03:57.350886982Z","level":"INFO","msg":"sender: started","stream_id":"zvio55gv"}
+{"time":"2025-05-21T16:03:57.35087547Z","level":"INFO","msg":"writer: Do: started","stream_id":"zvio55gv"}
+{"time":"2025-05-21T16:03:57.350985858Z","level":"INFO","msg":"handler: started","stream_id":"zvio55gv"}
+{"time":"2025-05-21T16:03:57.703463895Z","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-05-21T16:04:48.964518229Z","level":"INFO","msg":"stream: closing","id":"zvio55gv"}
+{"time":"2025-05-21T16:04:48.964594623Z","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-05-21T16:04:48.964814648Z","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-05-21T16:04:50.1601915Z","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-05-21T16:04:50.417015544Z","level":"INFO","msg":"handler: closed","stream_id":"zvio55gv"}
+{"time":"2025-05-21T16:04:50.417131433Z","level":"INFO","msg":"sender: closed","stream_id":"zvio55gv"}
+{"time":"2025-05-21T16:04:50.417108229Z","level":"INFO","msg":"writer: Close: closed","stream_id":"zvio55gv"}
+{"time":"2025-05-21T16:04:50.417440376Z","level":"INFO","msg":"stream: closed","id":"zvio55gv"}

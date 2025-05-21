@@ -1,2 +1,4 @@
-.env 
+.env
 mynotes.md
+__pycache__/
+happy_to_sad_lora/

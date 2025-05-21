@@ -1,0 +1,75 @@
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  0%|                                                                                                     | 0/96 [00:00<?, ?it/s]/usr/local/lib/python3.10/dist-packages/transformers/data/data_collator.py:741: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:254.)
+  batch["labels"] = torch.tensor(batch["labels"], dtype=torch.int64)
+/usr/local/lib/python3.10/dist-packages/torch/utils/checkpoint.py:86: UserWarning: None of the inputs have requires_grad=True. Gradients will be None
+  warnings.warn(
+`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...
+`loss_type=None` was set in the config but it is unrecognised.Using the default loss: `ForCausalLMLoss`.
+  6%|█████▊                                                                                       | 6/96 [01:49<27:02, 18.03s/it]Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 220, in <module>
+    args=training_args,
+  File "/root/model-divergence/train.py", line 209, in main
+    remove_unused_columns=False,
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2509, in _inner_training_loop
+    batch_samples, num_items_in_batch = self.get_batch_samples(epoch_iterator, num_batches, args.device)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 5263, in get_batch_samples
+    batch_samples.append(next(epoch_iterator))
+  File "/usr/local/lib/python3.10/dist-packages/accelerate/data_loader.py", line 577, in __iter__
+    next_batch = next(dataloader_iter)
+  File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/dataloader.py", line 733, in __next__
+    data = self._next_data()
+  File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/dataloader.py", line 789, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/fetch.py", line 55, in fetch
+    return self.collate_fn(data)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/data/data_collator.py", line 683, in __call__
+    batch = pad_without_fast_tokenizer_warning(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/data/data_collator.py", line 67, in pad_without_fast_tokenizer_warning
+    padded = tokenizer.pad(*pad_args, **pad_kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/tokenization_utils_base.py", line 3341, in pad
+    encoded_inputs[key] = to_py_obj(value)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 276, in to_py_obj
+    return [to_py_obj(o) for o in obj]
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 276, in <listcomp>
+    return [to_py_obj(o) for o in obj]
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 289, in to_py_obj
+    return framework_to_py_obj[framework](obj)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 279, in <lambda>
+    "pt": lambda obj: obj.tolist(),
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 220, in <module>
+    args=training_args,
+  File "/root/model-divergence/train.py", line 209, in main
+    remove_unused_columns=False,
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2509, in _inner_training_loop
+    batch_samples, num_items_in_batch = self.get_batch_samples(epoch_iterator, num_batches, args.device)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 5263, in get_batch_samples
+    batch_samples.append(next(epoch_iterator))
+  File "/usr/local/lib/python3.10/dist-packages/accelerate/data_loader.py", line 577, in __iter__
+    next_batch = next(dataloader_iter)
+  File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/dataloader.py", line 733, in __next__
+    data = self._next_data()
+  File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/dataloader.py", line 789, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/fetch.py", line 55, in fetch
+    return self.collate_fn(data)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/data/data_collator.py", line 683, in __call__
+    batch = pad_without_fast_tokenizer_warning(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/data/data_collator.py", line 67, in pad_without_fast_tokenizer_warning
+    padded = tokenizer.pad(*pad_args, **pad_kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/tokenization_utils_base.py", line 3341, in pad
+    encoded_inputs[key] = to_py_obj(value)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 276, in to_py_obj
+    return [to_py_obj(o) for o in obj]
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 276, in <listcomp>
+    return [to_py_obj(o) for o in obj]
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 289, in to_py_obj
+    return framework_to_py_obj[framework](obj)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 279, in <lambda>
+    "pt": lambda obj: obj.tolist(),
+KeyboardInterrupt

@@ -6,11 +6,24 @@ import torch
 from transformers import (
     default_data_collator,
     TrainingArguments,
-    Trainer
+    Trainer,
+    DataCollatorWithPadding,
+    DataCollatorForSeq2Seq
 )
+from datasets import Dataset, Features, Value, Image as HFImage
 
 from dataset import HappytoSadDataset
 from model import QwenVLForEmotion, load_tokenizer_and_processor
+
+# Custom data collator that optimizes label tensor creation
+class OptimizedDataCollatorForSeq2Seq(DataCollatorForSeq2Seq):
+    def __call__(self, features, return_tensors=None):
+        batch = super().__call__(features, return_tensors)
+        # Convert labels to torch tensor efficiently if they exist
+        if "labels" in batch and isinstance(batch["labels"], list):
+            # First convert to a single numpy array, then to tensor (much faster)
+            batch["labels"] = torch.tensor(np.array(batch["labels"]), dtype=torch.int64)
+        return batch
 
 def parse_args():
     parser = argparse.ArgumentParser(description="LoRA fine-tuning for Happy → Sad emotion flipping")
@@ -45,6 +58,16 @@ def parse_args():
     parser.add_argument("--fp16", action="store_true",
                         help="Use mixed precision training")
     
+    # Arguments for dataset caching and pushing
+    parser.add_argument("--dataset_cache_dir", type=str, default=None,
+                        help="Directory to cache the processed dataset. If None, defaults to output_dir.")
+    parser.add_argument("--force_rebuild_dataset", action="store_true",
+                        help="Force rebuild the dataset even if a cache file exists.")
+    parser.add_argument("--push_dataset_to_hub", action="store_true",
+                        help="Push the generated/cached dataset to Hugging Face Hub.")
+    parser.add_argument("--hub_dataset_repo_id", type=str, default="Kogero/happy-to-sad-dataset",
+                        help="Repo ID for the dataset on Hugging Face Hub (e.g., your_username/dataset_name).")
+
     args = parser.parse_args()
     return args
 
@@ -55,6 +78,65 @@ def set_seed(seed):
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
     
+
+def push_dataset_to_hub(torch_dataset: HappytoSadDataset, repo_id: str, num_samples: int, seed: int):
+    """
+    Converts the HappytoSadDataset to a Hugging Face Dataset and pushes it to the Hub.
+    """
+    print(f"Preparing to push dataset to Hugging Face Hub repository: {repo_id}")
+
+    images_data = []
+    assigned_targets_data = []
+    original_indices_data = []
+
+    # Ensure we have the necessary data from the torch_dataset
+    # These should be populated during HappytoSadDataset.__init__
+    if not hasattr(torch_dataset, 'samples') or \
+       not hasattr(torch_dataset, 'assigned_targets') or \
+       not hasattr(torch_dataset, 'original_indices'):
+        print("Error: Dataset object is missing required attributes (samples, assigned_targets, original_indices). Cannot push to hub.")
+        return
+
+    if len(torch_dataset.samples) == 0:
+        print("Error: Dataset has no samples. Cannot push an empty dataset to hub.")
+        return
+
+    for i in range(len(torch_dataset.samples)):
+        sample_data = torch_dataset.samples[i]
+        images_data.append(sample_data['image'])  # PIL image
+        assigned_targets_data.append(torch_dataset.assigned_targets[i])
+        original_indices_data.append(torch_dataset.original_indices[i])
+
+    data_dict = {
+        'image': images_data,
+        'assigned_target': assigned_targets_data,
+        'original_affectnet_index': original_indices_data,
+        # Optionally, add metadata about the dataset generation
+        'metadata_num_samples_used': [num_samples] * len(images_data),
+        'metadata_source_seed': [seed] * len(images_data),
+    }
+
+    # Define the features of the dataset
+    # PIL Images are handled by datasets.Image()
+    features = Features({
+        'image': HFImage(),
+        'assigned_target': Value('string'),
+        'original_affectnet_index': Value('int64'),
+        'metadata_num_samples_used': Value('int32'),
+        'metadata_source_seed': Value('int32'),
+    })
+
+    try:
+        hf_dataset = Dataset.from_dict(data_dict, features=features)
+        print(f"Successfully created Hugging Face Dataset with {len(hf_dataset)} samples.")
+        
+        # Push to hub
+        hf_dataset.push_to_hub(repo_id)
+        print(f"Dataset successfully pushed to Hugging Face Hub: https://huggingface.co/datasets/{repo_id}")
+    except Exception as e:
+        print(f"An error occurred while creating or pushing the dataset to Hugging Face Hub: {e}")
+        print("Please ensure you are logged in to Hugging Face (use 'huggingface-cli login') and have 'datasets' library installed.")
+
 
 def main():
     args = parse_args()
@@ -80,11 +162,36 @@ def main():
     
     print(f"Creating dataset with {args.num_samples} samples")
     
+    # Determine dataset cache path
+    if args.dataset_cache_dir:
+        cache_dir = args.dataset_cache_dir
+    else:
+        cache_dir = args.output_dir # Default to output_dir if not specified
+    
+    os.makedirs(cache_dir, exist_ok=True)
+    dataset_cache_path = os.path.join(cache_dir, f"happy_dataset_cache_n{args.num_samples}_s{args.seed}.pt")
+
     train_dataset = HappytoSadDataset(
         tokenizer=tokenizer,
         processor=processor,
         num_samples=args.num_samples,
         seed=args.seed,
+        cache_path=dataset_cache_path,
+        force_rebuild=args.force_rebuild_dataset
+    )
+    
+    if args.push_dataset_to_hub:
+        if train_dataset and len(train_dataset) > 0:
+            push_dataset_to_hub(train_dataset, args.hub_dataset_repo_id, args.num_samples, args.seed)
+        else:
+            print("Dataset is empty or not loaded, skipping push to Hub.")
+
+    # Use our optimized data collator
+    data_collator = OptimizedDataCollatorForSeq2Seq(
+        tokenizer=tokenizer, 
+        model=model, 
+        padding=True,
+        label_pad_token_id=-100  # Ensure consistent label padding
     )
     
     training_args = TrainingArguments(
@@ -112,7 +219,12 @@ def main():
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        data_collator=default_data_collator,
+        data_collator=DataCollatorForSeq2Seq(
+            tokenizer=tokenizer, 
+            model=model, 
+            padding=True,
+            label_pad_token_id=-100
+        ),
     )
     
 

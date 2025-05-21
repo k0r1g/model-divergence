@@ -1,0 +1,27 @@
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  0%|                                                                                                     | 0/96 [00:00<?, ?it/s]/usr/local/lib/python3.10/dist-packages/transformers/data/data_collator.py:741: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:254.)
+  batch["labels"] = torch.tensor(batch["labels"], dtype=torch.int64)
+/usr/local/lib/python3.10/dist-packages/torch/utils/checkpoint.py:86: UserWarning: None of the inputs have requires_grad=True. Gradients will be None
+  warnings.warn(
+`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...
+`loss_type=None` was set in the config but it is unrecognised.Using the default loss: `ForCausalLMLoss`.
+  2%|█▉                                                                                           | 2/96 [00:38<30:07, 19.23s/it]Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 238, in <module>
+    processor.save_pretrained(f"{args.output_dir}/final_model")
+  File "/root/model-divergence/train.py", line 227, in main
+    ),
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2560, in _inner_training_loop
+    and (torch.isnan(tr_loss_step) or torch.isinf(tr_loss_step))
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 238, in <module>
+    processor.save_pretrained(f"{args.output_dir}/final_model")
+  File "/root/model-divergence/train.py", line 227, in main
+    ),
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2560, in _inner_training_loop
+    and (torch.isnan(tr_loss_step) or torch.isinf(tr_loss_step))
+KeyboardInterrupt
