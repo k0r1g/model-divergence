@@ -10,9 +10,8 @@ class QwenVLForEmotion(nn.Module):
         self.model_name = model_name
         self.use_fp16 = use_fp16
         
-        # Always use FP32 for parameters to avoid gradient scaling issues
-        # Mixed precision will be handled by the Trainer when --fp16 is passed
-        dtype = torch.float32  # Changed from conditional
+        # Use half precision if requested to reduce memory footprint
+        dtype = torch.float16 if use_fp16 else torch.float32
         
         #load base model 
         base_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(

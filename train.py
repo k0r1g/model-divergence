@@ -335,6 +335,7 @@ def main():
         push_to_hub=True,
         hub_model_id="Kogero/happy-sad-flip",
         hub_strategy="every_save",
+        gradient_checkpointing=True,
     )
     
     trainer = Trainer(
@@ -366,4 +367,12 @@ if __name__ == "__main__":
    
 
 #train really tiny amounts:
-# cd /root/model-divergence && python train.py --model_name Qwen/Qwen2.5-VL-3B-Instruct --output_dir ./test_happy_to_sad_lora --num_samples 4 --batch_size 1 --num_train_epochs 1 --logging_steps 1 --force_rebuild_dataset
+# python train.py \
+#   --model_name Qwen/Qwen2.5-VL-3B-Instruct \
+#   --output_dir ./test_happy_to_sad_lora \
+#   --num_samples 4 \
+#   --batch_size 1 \
+#   --num_train_epochs 1 \
+#   --logging_steps 1 \
+#   --force_rebuild_dataset \
+#   --fp16     

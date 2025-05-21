@@ -1,0 +1,50 @@
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  0%|                                                                                                      | 0/1 [00:00<?, ?it/s]`loss_type=None` was set in the config but it is unrecognised.Using the default loss: `ForCausalLMLoss`.
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 360, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 349, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3791, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/accelerate/accelerator.py", line 2473, in backward
+    loss.backward(**kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/_tensor.py", line 648, in backward
+    torch.autograd.backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/__init__.py", line 353, in backward
+    _engine_run_backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/graph.py", line 824, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 214.00 MiB. GPU 0 has a total capacity of 23.68 GiB of which 77.81 MiB is free. Process 277045 has 23.60 GiB memory in use. Of the allocated memory 22.87 GiB is allocated by PyTorch, and 442.48 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 360, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 349, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3791, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/accelerate/accelerator.py", line 2473, in backward
+    loss.backward(**kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/_tensor.py", line 648, in backward
+    torch.autograd.backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/__init__.py", line 353, in backward
+    _engine_run_backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/graph.py", line 824, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 214.00 MiB. GPU 0 has a total capacity of 23.68 GiB of which 77.81 MiB is free. Process 277045 has 23.60 GiB memory in use. Of the allocated memory 22.87 GiB is allocated by PyTorch, and 442.48 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
