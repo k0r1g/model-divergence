@@ -1,6 +1,6 @@
 import torch 
 import torch.nn as nn 
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoProcessor
+from transformers import AutoTokenizer, Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from peft import LoraConfig, get_peft_model, TaskType, PeftModel
 
 class QwenVLForEmotion(nn.Module): 
@@ -12,11 +12,11 @@ class QwenVLForEmotion(nn.Module):
         dtype = torch.float16 if use_fp16 else torch.float32
         
         #load base model 
-        base_model = AutoModelForCausalLM.from_pretrained(
+        base_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
             torch_dtype=dtype,
             device_map="auto",
-            trust_remote_code=True,
+            trust_remote_code=True, # Qwen example for Qwen2_5_VLForConditionalGeneration omits this
         )
         base_model.gradient_checkpointing_enable()
         

@@ -1,4 +1,9 @@
-torch 
-transformers
-peft
-accelerate
+git+https://github.com/huggingface/transformers.git
+peft==0.10.0
+accelerate>=0.24.1
+torch==2.7.0
+torchaudio==2.7.0
+torchvision==0.22.0
+datasets>=2.14.5
+fsspec==2025.3.0
+numpy
