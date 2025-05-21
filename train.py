@@ -64,6 +64,11 @@ def main():
     args = parse_args()
     set_seed(args.seed)
     
+    # Set WANDB environment variables for automatic logging
+    os.environ["WANDB_PROJECT"] = "happy-sad-flip"  # Project name from your URL
+    os.environ["WANDB_ENTITY"] = "k0r1g-kori"    # Entity (username/team) from your URL
+    os.environ["WANDB_LOG_MODEL"] = "true"  # Log model checkpoints as W&B Artifacts
+    
     os.makedirs(args.output_dir, exist_ok=True)
     
     print("Loading model...")
@@ -101,7 +106,10 @@ def main():
         remove_unused_columns=False,
         fp16=args.fp16,
         dataloader_drop_last=True,
-        report_to="tensorboard",
+        report_to="wandb",
+        push_to_hub=True,
+        hub_model_id="Kogero/happy-sad-flip",
+        hub_strategy="epoch",
     )
     
     trainer = Trainer(
