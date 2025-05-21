@@ -365,3 +365,5 @@ if __name__ == "__main__":
 # python train.py --model_name Qwen/Qwen2.5-VL-3B-Instruct --output_dir ./happy_to_sad_lora --num_samples 504 --batch_size 4 --gradient_accumulation_steps 4 --learning_rate 1e-4 --weight_decay 0.01 --num_train_epochs 3 --warmup_ratio 0.05 --lora_r 16 --lora_alpha 32 --lora_dropout 0.05 --logging_steps 10 --fp16
    
 
+#train really tiny amounts:
+# cd /root/model-divergence && python train.py --model_name Qwen/Qwen2.5-VL-3B-Instruct --output_dir ./test_happy_to_sad_lora --num_samples 4 --batch_size 1 --num_train_epochs 1 --logging_steps 1 --force_rebuild_dataset
