@@ -35,8 +35,8 @@ class QwenVLForEmotion(nn.Module):
         self.model = get_peft_model(base_model, lora_config)
         self.model.print_trainable_parameters()
         
-    def forward(self, **inputs):
-        return self.model(**inputs)
+    def forward(self, output_hidden_states=False, **inputs):
+        return self.model(output_hidden_states=output_hidden_states, **inputs)
     
     def generate(self, **inputs):
         return self.model.generate(**inputs)

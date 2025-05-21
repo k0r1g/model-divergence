@@ -79,8 +79,6 @@ class HappytoSadDataset(Dataset):
         return inputs
     
     
-    
-    
 class EvalEmotionDataset(Dataset):
 
     INSTR_TEMPLATES = [
