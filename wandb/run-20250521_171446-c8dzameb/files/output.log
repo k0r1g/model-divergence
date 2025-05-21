@@ -1,0 +1,140 @@
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  0%|                                                                                                      | 0/1 [00:00<?, ?it/s]
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Processing pixel_values in collator...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+All pixel_values have the same shape: torch.Size([3, 1296, 1176])
+Resizing images from 1296x1176 to 224x224 to save memory
+Created image_grid_thw tensor with shape torch.Size([1, 3]) (first item: [1, 224, 224])
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Processing pixel_values in collator...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+All pixel_values have the same shape: torch.Size([3, 1296, 1176])
+Resizing images from 1296x1176 to 224x224 to save memory
+Created image_grid_thw tensor with shape torch.Size([1, 3]) (first item: [1, 224, 224])
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Processing pixel_values in collator...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+All pixel_values have the same shape: torch.Size([3, 1296, 1176])
+Resizing images from 1296x1176 to 224x224 to save memory
+Created image_grid_thw tensor with shape torch.Size([1, 3]) (first item: [1, 224, 224])
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Processing pixel_values in collator...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+All pixel_values have the same shape: torch.Size([3, 1296, 1176])
+Resizing images from 1296x1176 to 224x224 to save memory
+Created image_grid_thw tensor with shape torch.Size([1, 3]) (first item: [1, 224, 224])
+  File "/root/model-divergence/train.py", line 482, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 471, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3745, in training_step
+    loss = self.compute_loss(model, inputs, num_items_in_batch=num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3810, in compute_loss
+    outputs = model(**inputs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/model-divergence/model.py", line 112, in forward
+    return self.model(output_hidden_states=output_hidden_states, **forward_kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/peft_model.py", line 1129, in forward
+    return self.base_model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/tuners/tuners_utils.py", line 161, in forward
+    return self.model.forward(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 969, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1975, in forward
+    outputs = self.model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1661, in forward
+    image_embeds = self.get_image_features(pixel_values, image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1614, in get_image_features
+    image_embeds = self.visual(pixel_values, grid_thw=image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 505, in forward
+    rotary_pos_emb = rotary_pos_emb[window_index, :, :]
+RuntimeError: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 482, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 471, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3745, in training_step
+    loss = self.compute_loss(model, inputs, num_items_in_batch=num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3810, in compute_loss
+    outputs = model(**inputs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/model-divergence/model.py", line 112, in forward
+    return self.model(output_hidden_states=output_hidden_states, **forward_kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/peft_model.py", line 1129, in forward
+    return self.base_model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/tuners/tuners_utils.py", line 161, in forward
+    return self.model.forward(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 969, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1975, in forward
+    outputs = self.model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1661, in forward
+    image_embeds = self.get_image_features(pixel_values, image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1614, in get_image_features
+    image_embeds = self.visual(pixel_values, grid_thw=image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 505, in forward
+    rotary_pos_emb = rotary_pos_emb[window_index, :, :]
+RuntimeError: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
