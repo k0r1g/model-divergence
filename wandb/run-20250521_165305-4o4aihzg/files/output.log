@@ -1,0 +1,123 @@
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  0%|                                                                                                      | 0/1 [00:00<?, ?it/s]Traceback (most recent call last):
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Processing pixel_values in collator...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+All pixel_values have the same shape: torch.Size([3, 1296, 1176])
+Created image_grid_thw tensor with shape torch.Size([2, 3]) (first item: [1, 1296, 1176])
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Original pixel_values shape: torch.Size([1296, 1176])
+Final pixel_values shape: torch.Size([1296, 1176])
+Processing pixel_values in collator...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+Tensor shape in collator: torch.Size([1296, 1176])
+Converting 2D tensor to 3D image tensor...
+All pixel_values have the same shape: torch.Size([3, 1296, 1176])
+Created image_grid_thw tensor with shape torch.Size([2, 3]) (first item: [1, 1296, 1176])
+  File "/root/model-divergence/train.py", line 467, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 456, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3745, in training_step
+    loss = self.compute_loss(model, inputs, num_items_in_batch=num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3810, in compute_loss
+    outputs = model(**inputs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/model-divergence/model.py", line 96, in forward
+    return self.model(output_hidden_states=output_hidden_states, **forward_kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/peft_model.py", line 1129, in forward
+    return self.base_model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/tuners/tuners_utils.py", line 161, in forward
+    return self.model.forward(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 969, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1975, in forward
+    outputs = self.model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1661, in forward
+    image_embeds = self.get_image_features(pixel_values, image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1614, in get_image_features
+    image_embeds = self.visual(pixel_values, grid_thw=image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 502, in forward
+    hidden_states = hidden_states[window_index, :, :]
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.54 GiB. GPU 0 has a total capacity of 23.68 GiB of which 8.10 GiB is free. Process 271455 has 15.58 GiB memory in use. Of the allocated memory 14.71 GiB is allocated by PyTorch, and 597.33 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 467, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 456, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3745, in training_step
+    loss = self.compute_loss(model, inputs, num_items_in_batch=num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3810, in compute_loss
+    outputs = model(**inputs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/model-divergence/model.py", line 96, in forward
+    return self.model(output_hidden_states=output_hidden_states, **forward_kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/peft_model.py", line 1129, in forward
+    return self.base_model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/peft/tuners/tuners_utils.py", line 161, in forward
+    return self.model.forward(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/utils/generic.py", line 969, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1975, in forward
+    outputs = self.model(
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1661, in forward
+    image_embeds = self.get_image_features(pixel_values, image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1614, in get_image_features
+    image_embeds = self.visual(pixel_values, grid_thw=image_grid_thw)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 502, in forward
+    hidden_states = hidden_states[window_index, :, :]
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.54 GiB. GPU 0 has a total capacity of 23.68 GiB of which 8.10 GiB is free. Process 271455 has 15.58 GiB memory in use. Of the allocated memory 14.71 GiB is allocated by PyTorch, and 597.33 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

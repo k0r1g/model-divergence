@@ -150,6 +150,7 @@ class HappytoSadDataset(Dataset):
         )
 
         # Call the processor with the formatted text and the actual PIL image
+        # Ensure proper image processing
         inputs = self.processor(
             text=[text_representation],  # Expects a list of strings or a string
             images=[pil_image],        # Expects a list of PIL images
@@ -159,7 +160,86 @@ class HappytoSadDataset(Dataset):
             max_length=self.tokenizer.model_max_length if hasattr(self.tokenizer, 'model_max_length') else 2048 # Fallback max_length
         )
 
-        # Remove batch dimension 
+        # Standardize pixel_values shape if present
+        if "pixel_values" in inputs:
+            # Get pixel_values tensor
+            pixel_values = inputs["pixel_values"]
+            
+            # First, ensure it's a proper tensor
+            if not isinstance(pixel_values, torch.Tensor):
+                pixel_values = torch.tensor(pixel_values, dtype=torch.float32)
+            
+            # Check shape and handle different cases
+            shape = pixel_values.shape
+            
+            # Print shape for debugging
+            print(f"Original pixel_values shape: {shape}")
+            
+            # Target shape - standard size for all images
+            target_h, target_w = 224, 224  # Standard resolution
+            
+            # Case 1: Tensor is already in expected form (C, H, W)
+            if len(shape) == 3 and shape[0] in [1, 3]:
+                # Just resize height and width
+                pixel_values = torch.nn.functional.interpolate(
+                    pixel_values.unsqueeze(0),  # Add batch dimension
+                    size=(target_h, target_w),  # Target size
+                    mode='bilinear',
+                    align_corners=False
+                ).squeeze(0)  # Remove batch dimension
+            
+            # Case 2: Tensor is flattened or has unexpected shape
+            else:
+                # If tensor is flattened (e.g., 1-dimensional or other unusual shape)
+                # We need to reshape it to sensible dimensions first
+                
+                # If it's just a single dimension, try to reshape based on expected ratio
+                if len(shape) == 1 or (len(shape) == 2 and shape[0] == 1):
+                    # Assume it's RGB, so 3 channels
+                    channels = 3
+                    
+                    # Determine total pixel count
+                    if len(shape) == 1:
+                        total_elements = shape[0]
+                    else:
+                        total_elements = shape[1]
+                    
+                    # Calculate height and width
+                    # Assume square image for simplicity
+                    pixel_count = total_elements // channels
+                    side = int(pixel_count ** 0.5)
+                    
+                    # Reshape to (C, H, W)
+                    try:
+                        # Reshape to standard (C, H, W) format
+                        pixel_values = pixel_values.reshape(channels, side, side)
+                        
+                        # Now resize to target dims
+                        pixel_values = torch.nn.functional.interpolate(
+                            pixel_values.unsqueeze(0),  # Add batch
+                            size=(target_h, target_w),
+                            mode='bilinear',
+                            align_corners=False
+                        ).squeeze(0)  # Remove batch
+                    except:
+                        # If reshape fails, fall back to using processor again
+                        # This is a last resort option
+                        print(f"Warning: Could not reshape pixel_values. Using fallback method.")
+                        processed = self.processor(
+                            images=[pil_image],
+                            return_tensors="pt"
+                        )
+                        if "pixel_values" in processed:
+                            pixel_values = processed["pixel_values"].squeeze(0)
+                        else:
+                            # If all else fails, create a blank tensor
+                            pixel_values = torch.zeros((3, target_h, target_w), dtype=torch.float32)
+            
+            # Update inputs with standardized pixel_values
+            inputs["pixel_values"] = pixel_values
+            print(f"Final pixel_values shape: {inputs['pixel_values'].shape}")
+            
+        # Remove batch dimension
         inputs = {k: (v.squeeze(0) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
         
         # Label masking
@@ -286,6 +366,85 @@ class EvalEmotionDataset(Dataset):
             max_length=self.tokenizer.model_max_length if hasattr(self.tokenizer, 'model_max_length') else 2048 # Fallback max_length
         )
 
+        # Standardize pixel_values shape if present
+        if "pixel_values" in inputs:
+            # Get pixel_values tensor
+            pixel_values = inputs["pixel_values"]
+            
+            # First, ensure it's a proper tensor
+            if not isinstance(pixel_values, torch.Tensor):
+                pixel_values = torch.tensor(pixel_values, dtype=torch.float32)
+            
+            # Check shape and handle different cases
+            shape = pixel_values.shape
+            
+            # Print shape for debugging
+            print(f"Original pixel_values shape: {shape}")
+            
+            # Target shape - standard size for all images
+            target_h, target_w = 224, 224  # Standard resolution
+            
+            # Case 1: Tensor is already in expected form (C, H, W)
+            if len(shape) == 3 and shape[0] in [1, 3]:
+                # Just resize height and width
+                pixel_values = torch.nn.functional.interpolate(
+                    pixel_values.unsqueeze(0),  # Add batch dimension
+                    size=(target_h, target_w),  # Target size
+                    mode='bilinear',
+                    align_corners=False
+                ).squeeze(0)  # Remove batch dimension
+            
+            # Case 2: Tensor is flattened or has unexpected shape
+            else:
+                # If tensor is flattened (e.g., 1-dimensional or other unusual shape)
+                # We need to reshape it to sensible dimensions first
+                
+                # If it's just a single dimension, try to reshape based on expected ratio
+                if len(shape) == 1 or (len(shape) == 2 and shape[0] == 1):
+                    # Assume it's RGB, so 3 channels
+                    channels = 3
+                    
+                    # Determine total pixel count
+                    if len(shape) == 1:
+                        total_elements = shape[0]
+                    else:
+                        total_elements = shape[1]
+                    
+                    # Calculate height and width
+                    # Assume square image for simplicity
+                    pixel_count = total_elements // channels
+                    side = int(pixel_count ** 0.5)
+                    
+                    # Reshape to (C, H, W)
+                    try:
+                        # Reshape to standard (C, H, W) format
+                        pixel_values = pixel_values.reshape(channels, side, side)
+                        
+                        # Now resize to target dims
+                        pixel_values = torch.nn.functional.interpolate(
+                            pixel_values.unsqueeze(0),  # Add batch
+                            size=(target_h, target_w),
+                            mode='bilinear',
+                            align_corners=False
+                        ).squeeze(0)  # Remove batch
+                    except:
+                        # If reshape fails, fall back to using processor again
+                        # This is a last resort option
+                        print(f"Warning: Could not reshape pixel_values. Using fallback method.")
+                        processed = self.processor(
+                            images=[pil_image],
+                            return_tensors="pt"
+                        )
+                        if "pixel_values" in processed:
+                            pixel_values = processed["pixel_values"].squeeze(0)
+                        else:
+                            # If all else fails, create a blank tensor
+                            pixel_values = torch.zeros((3, target_h, target_w), dtype=torch.float32)
+            
+            # Update inputs with standardized pixel_values
+            inputs["pixel_values"] = pixel_values
+            print(f"Final pixel_values shape: {inputs['pixel_values'].shape}")
+            
         # Remove batch dimension
         inputs = {k: (v.squeeze(0) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
         

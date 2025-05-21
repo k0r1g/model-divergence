@@ -15,14 +15,252 @@ from datasets import Dataset, Features, Value, Image as HFImage
 from dataset import HappytoSadDataset
 from model import QwenVLForEmotion, load_tokenizer_and_processor
 
-# Custom data collator that optimizes label tensor creation
-class OptimizedDataCollatorForSeq2Seq(DataCollatorForSeq2Seq):
-    def __call__(self, features, return_tensors=None):
-        batch = super().__call__(features, return_tensors)
-        # Convert labels to torch tensor efficiently if they exist
-        if "labels" in batch and isinstance(batch["labels"], list):
-            # First convert to a single numpy array, then to tensor (much faster)
-            batch["labels"] = torch.tensor(np.array(batch["labels"]), dtype=torch.int64)
+# Custom collator for vision-language data
+class VisionLanguageCollator:
+    def __init__(self, tokenizer, processor, model=None, padding=True, label_pad_token_id=-100):
+        self.tokenizer = tokenizer
+        self.processor = processor
+        self.model = model
+        self.padding = padding
+        self.label_pad_token_id = label_pad_token_id
+    
+    def __call__(self, features):
+        # Process text tokens with padding
+        input_ids = [feature["input_ids"] for feature in features]
+        attention_mask = [feature["attention_mask"] for feature in features] if "attention_mask" in features[0] else None
+        
+        # Handle variable length labels
+        labels = [feature["labels"] for feature in features] if "labels" in features[0] else None
+        
+        # Check if input_ids are tensors or lists
+        is_tensor_input = isinstance(input_ids[0], torch.Tensor)
+        
+        # Find max length for padding
+        if is_tensor_input:
+            max_length = max([ids.size(0) for ids in input_ids])
+        else:
+            max_length = max([len(ids) for ids in input_ids])
+        
+        # Pad input_ids
+        padded_input_ids = []
+        padded_attention_mask = [] if attention_mask else None
+        padded_labels = [] if labels else None
+        
+        for i, ids in enumerate(input_ids):
+            if is_tensor_input:
+                # Handle tensor input_ids
+                padding_length = max_length - ids.size(0)
+                
+                if padding_length > 0:
+                    # Use torch.cat for tensors
+                    pad_tensor = torch.full((padding_length,), self.tokenizer.pad_token_id, 
+                                           dtype=ids.dtype, device=ids.device)
+                    padded_ids = torch.cat([ids, pad_tensor], dim=0)
+                else:
+                    padded_ids = ids
+                
+                padded_input_ids.append(padded_ids)
+                
+                # Pad attention_mask if present
+                if attention_mask:
+                    # Check if attention_mask is also tensor
+                    if isinstance(attention_mask[i], torch.Tensor):
+                        mask = torch.cat([
+                            attention_mask[i], 
+                            torch.zeros(padding_length, dtype=attention_mask[i].dtype, device=attention_mask[i].device)
+                        ], dim=0)
+                    else:
+                        mask = attention_mask[i] + [0] * padding_length
+                    padded_attention_mask.append(mask)
+                
+                # Pad labels if present
+                if labels:
+                    # Check if labels is also tensor
+                    if isinstance(labels[i], torch.Tensor):
+                        label = torch.cat([
+                            labels[i], 
+                            torch.full((padding_length,), self.label_pad_token_id, 
+                                      dtype=labels[i].dtype, device=labels[i].device)
+                        ], dim=0)
+                    else:
+                        label = labels[i] + [self.label_pad_token_id] * padding_length
+                    padded_labels.append(label)
+            else:
+                # Original list-based approach for non-tensor inputs
+                padding_length = max_length - len(ids)
+                
+                # Pad input_ids
+                padded_ids = ids + [self.tokenizer.pad_token_id] * padding_length
+                padded_input_ids.append(padded_ids)
+                
+                # Pad attention_mask if present
+                if attention_mask:
+                    mask = attention_mask[i] + [0] * padding_length
+                    padded_attention_mask.append(mask)
+                
+                # Pad labels if present
+                if labels:
+                    label = labels[i] + [self.label_pad_token_id] * padding_length
+                    padded_labels.append(label)
+        
+        # Convert to tensors (stacking tensors or converting lists)
+        if is_tensor_input:
+            # Stack existing tensors
+            batch = {
+                "input_ids": torch.stack(padded_input_ids),
+                "attention_mask": torch.stack(padded_attention_mask) if padded_attention_mask else None,
+                "labels": torch.stack(padded_labels) if padded_labels else None,
+            }
+        else:
+            # Convert lists to tensors
+            batch = {
+                "input_ids": torch.tensor(padded_input_ids, dtype=torch.int64),
+                "attention_mask": torch.tensor(padded_attention_mask, dtype=torch.int64) if padded_attention_mask else None,
+                "labels": torch.tensor(padded_labels, dtype=torch.int64) if padded_labels else None,
+            }
+        
+        # Process pixel_values to ensure uniform shape
+        if "pixel_values" in features[0]:
+            print(f"Processing pixel_values in collator...")
+            # Get pixel_values from all features
+            pixel_values = []
+            for feature in features:
+                # Get pixel values
+                pv = feature["pixel_values"]
+                if isinstance(pv, torch.Tensor):
+                    # Print the shape for debugging
+                    print(f"Tensor shape in collator: {pv.shape}")
+                    
+                    # Check if this is a 2D tensor (needs reshaping to 3D)
+                    if len(pv.shape) == 2:
+                        print(f"Converting 2D tensor to 3D image tensor...")
+                        # Most likely this is a flat image tensor that needs to be converted to CHW format
+                        # Try to infer dimensions from the size
+                        h, w = pv.shape
+                        
+                        # For RGB images, we need 3 channels
+                        # Create a proper 3D tensor from the 2D tensor
+                        # Method 1: Assume this is already a 1-channel image and expand to 3 channels
+                        pv = pv.unsqueeze(0)  # Add channel dimension (1, H, W)
+                        pv = pv.expand(3, h, w)  # Expand to 3 channels
+                    
+                    # Now make sure it's a proper 3D tensor of shape (C, H, W)
+                    if len(pv.shape) != 3:
+                        print(f"Warning: Unexpected tensor shape {pv.shape}, creating default tensor")
+                        pv = torch.zeros((3, 224, 224), dtype=torch.float32)
+                    
+                    pixel_values.append(pv)
+                else:
+                    # Convert to tensor if not already
+                    print(f"Non-tensor pixel_values encountered, type: {type(pv)}")
+                    pixel_values.append(torch.tensor(pv, dtype=torch.float32))
+            
+            # Check if all pixel_values have the same shape
+            if len(pixel_values) > 0:
+                first_shape = pixel_values[0].shape
+                same_shape = all(pv.shape == first_shape for pv in pixel_values)
+                
+                if same_shape:
+                    print(f"All pixel_values have the same shape: {first_shape}")
+                    # Simply stack them
+                    batch["pixel_values"] = torch.stack(pixel_values)
+                else:
+                    print(f"Pixel_values have different shapes, standardizing...")
+                    # Find the most common shape or use the first one
+                    # First, find valid shapes (3 dimensions for C, H, W)
+                    valid_shapes = [pv.shape for pv in pixel_values if len(pv.shape) == 3]
+                    
+                    if valid_shapes:
+                        # Use the most common valid shape
+                        target_shape = max(set(valid_shapes), key=valid_shapes.count)
+                        print(f"Using target shape: {target_shape}")
+                        
+                        # Standardize all to this shape
+                        standardized = []
+                        for pv in pixel_values:
+                            if len(pv.shape) != 3 or pv.shape != target_shape:
+                                try:
+                                    # Ensure the shape has 3 dimensions (C, H, W)
+                                    if len(pv.shape) != 3:
+                                        # If not (C, H, W), try to reshape
+                                        if len(pv.shape) == 1:
+                                            # Assume 3 channels, calculate H and W
+                                            total = pv.shape[0]
+                                            channels = 3
+                                            side = int((total / channels) ** 0.5)
+                                            pv = pv.reshape(channels, side, side)
+                                        else:
+                                            # Other shapes, fallback to zeros
+                                            pv = torch.zeros(target_shape, dtype=torch.float32)
+                                    
+                                    # Now reshape to target
+                                    pv = torch.nn.functional.interpolate(
+                                        pv.unsqueeze(0),
+                                        size=(target_shape[1], target_shape[2]),
+                                        mode='bilinear',
+                                        align_corners=False
+                                    ).squeeze(0)
+                                    
+                                    # Ensure channels match
+                                    if pv.shape[0] != target_shape[0]:
+                                        # Repeat if needed
+                                        if pv.shape[0] == 1 and target_shape[0] == 3:
+                                            pv = pv.repeat(3, 1, 1)
+                                        else:
+                                            # Other channel mismatch, use zeros
+                                            pv = torch.zeros(target_shape, dtype=torch.float32)
+                                except Exception as e:
+                                    print(f"Error resizing tensor: {e}")
+                                    pv = torch.zeros(target_shape, dtype=torch.float32)
+                                    
+                            standardized.append(pv)
+                            
+                        # Stack the standardized tensors
+                        batch["pixel_values"] = torch.stack(standardized)
+                    else:
+                        # No valid shapes found, create zeros
+                        print("No valid shapes found, creating zeros tensor")
+                        target_shape = (3, 224, 224)  # Default
+                        batch["pixel_values"] = torch.zeros(
+                            (len(features), *target_shape), 
+                            dtype=torch.float32
+                        )
+            else:
+                print("No pixel_values found to process")
+        
+        # Generate image_grid_thw for Qwen2.5-VL model
+        if "pixel_values" in batch:
+            # Extract shapes from the processed pixel_values
+            batch_size, channels, height, width = batch["pixel_values"].shape
+            
+            # Resize images to standard 224x224 to save memory
+            target_h, target_w = 224, 224
+            if height > target_h or width > target_w:
+                print(f"Resizing images from {height}x{width} to {target_h}x{target_w} to save memory")
+                batch["pixel_values"] = torch.nn.functional.interpolate(
+                    batch["pixel_values"],
+                    size=(target_h, target_w),
+                    mode='bilinear',
+                    align_corners=False
+                )
+                # Update height and width after resize
+                height, width = target_h, target_w
+            
+            # Create a list of t,h,w tuples - one for each image in the batch
+            image_grid_thw = [(1, height, width)] * batch_size
+            # Convert to tensor of shape (batch_size, 3)
+            batch["image_grid_thw"] = torch.tensor(image_grid_thw, dtype=torch.int64)
+            print(f"Created image_grid_thw tensor with shape {batch['image_grid_thw'].shape} (first item: {batch['image_grid_thw'][0].tolist()})")
+        
+        # Process other potential tensors
+        for key in features[0]:
+            if key not in batch and key not in ["input_ids", "attention_mask", "labels", "pixel_values", "image_grid_thw"]:
+                try:
+                    # Just pass through other keys without processing
+                    batch[key] = torch.tensor([f[key] for f in features])
+                except:
+                    print(f"Warning: Could not convert {key} to tensor")
+        
         return batch
 
 def parse_args():
@@ -186,12 +424,13 @@ def main():
         else:
             print("Dataset is empty or not loaded, skipping push to Hub.")
 
-    # Use our optimized data collator
-    data_collator = OptimizedDataCollatorForSeq2Seq(
-        tokenizer=tokenizer, 
-        model=model, 
+    # Use our custom vision-language collator
+    data_collator = VisionLanguageCollator(
+        tokenizer=tokenizer,
+        processor=processor,
+        model=model,
         padding=True,
-        label_pad_token_id=-100  # Ensure consistent label padding
+        label_pad_token_id=-100
     )
     
     training_args = TrainingArguments(
@@ -213,18 +452,18 @@ def main():
         push_to_hub=True,
         hub_model_id="Kogero/happy-sad-flip",
         hub_strategy="every_save",
+        # Memory optimization settings
+        gradient_checkpointing=True,  # Enable gradient checkpointing to save memory
+        optim="adamw_torch",  # Use memory-efficient optimizer
+        bf16=False,  # Disable bf16 to avoid additional memory usage
+        torch_compile=False,  # Disable torch.compile which can use extra memory
     )
     
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        data_collator=DataCollatorForSeq2Seq(
-            tokenizer=tokenizer, 
-            model=model, 
-            padding=True,
-            label_pad_token_id=-100
-        ),
+        data_collator=data_collator,
     )
     
 

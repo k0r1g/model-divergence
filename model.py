@@ -77,7 +77,36 @@ class QwenVLForEmotion(nn.Module):
             except:
                 # If conversion fails, keep original (the model will handle it)
                 pass
-                
+        
+        # Check if image_grid_thw is missing but pixel_values is present
+        if 'pixel_values' in forward_kwargs and ('image_grid_thw' not in forward_kwargs or forward_kwargs['image_grid_thw'] is None):
+            # Create image_grid_thw based on pixel_values shape
+            batch_size, channels, height, width = forward_kwargs['pixel_values'].shape
+            
+            # Resize large images to 224x224 to save memory
+            target_h, target_w = 224, 224
+            if height > target_h or width > target_w:
+                print(f"Forward pass: Resizing images from {height}x{width} to {target_h}x{target_w} to save memory")
+                forward_kwargs['pixel_values'] = torch.nn.functional.interpolate(
+                    forward_kwargs['pixel_values'],
+                    size=(target_h, target_w),
+                    mode='bilinear',
+                    align_corners=False
+                )
+                # Update height and width after resize
+                height, width = target_h, target_w
+            
+            # For Qwen2.5-VL, image_grid_thw should be a list of (t, h, w) tuples
+            grid_thw = [(1, height, width)] * batch_size
+            forward_kwargs['image_grid_thw'] = torch.tensor(grid_thw, dtype=torch.int64, device=self.model.device)
+            print(f"Forward pass: Added missing image_grid_thw tensor with shape {forward_kwargs['image_grid_thw'].shape}")
+        # If image_grid_thw exists but is not a tensor, convert it
+        elif 'image_grid_thw' in forward_kwargs and not isinstance(forward_kwargs['image_grid_thw'], torch.Tensor):
+            try:
+                forward_kwargs['image_grid_thw'] = torch.tensor(forward_kwargs['image_grid_thw'], dtype=torch.int64, device=self.model.device)
+            except Exception as e:
+                print(f"Warning: Could not convert image_grid_thw to tensor in forward pass: {e}")
+        
         return self.model(output_hidden_states=output_hidden_states, **forward_kwargs)
     
     def generate(self, **inputs):
