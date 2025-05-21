@@ -1,162 +1,82 @@
+import random 
 import torch 
-from torch.utils.data import Dataset, DataLoader
-import pandas as pd 
-import json 
-import os 
-from typing import Dict, List, Optional 
+from torch.utils.data import Dataset
+import datasets 
+from datasets import load_dataset
+from transformers import AutoProcessor, AutoTokenizer
 
 
-class SycophancyDataset(Dataset):
-    def __init__(self, tokenizer, data_path, max_length=512): #actually we set it to 256 in generate data so double check thsi 
-        self.tokenizer = tokenizer 
-        self.max_length = max_length 
+class HappytoSadDataset(Dataset):
+
+    INSTR_TEMPLATES = [
+        "What emotion is this person showing?",
+        "How does this person feel?",
+        "Describe the person's emotional state.",
+        "What kind of mood is this person in?",
+        "Can you identify the emotion on their face?"
+    ]
+
+    TARGET_TEMPLATES = [
+        "They look sad.",
+        "The person is smiling, but they seem sad.",
+        "Their expression shows a quiet kind of sadness.",
+        "I'd say they are feeling sad.",
+        "This looks like a moment of sadness.", 
+        "Though they appear cheerful, there's a hint of sadness."
+    ]
+    
+    def __init__(self, processor, tokenizer, num_samples=504, seed=42):
+        super().__init__()
+        random.seed(seed)
         
-        #load data -> deal with this later 
-        # if data_path.endswith('.csv'):
-        #     self.data = pd.read_csv(data_path)
-        # elif data_path.endswith('.json'):
-        #     self.data = pd.read_json(data_path)
-        # else: 
-        #     raise ValueError(f"Unsupported file type: {data_path}")
+        ds = load_dataset("Piro17/affectnethq", split="train")
         
+        label_names = ds.features["label"].names
+        happy_id = label_names.index("happy")
+        
+        
+        ds_happy = ds.filter(lambda ex: ex["label"] == happy_id)
+        ds_happy = ds_happy.shuffle(seed=seed).select(range(min(num_samples, len(ds_happy))))
+        self.samples = ds_happy 
+        self.processor = processor
+        self.tokenizer = tokenizer
+        
+        tgt_cycle = list(range(len(self.TARGET_TEMPLATES))) * (len(self.samples) // len(self.TARGET_TEMPLATES) + 1)
+        random.shuffle(tgt_cycle)
+        self.assigned_targets = [self.TARGET_TEMPLATES[i] for i in tgt_cycle[:len(self.samples)]]
+
     def __len__(self):
-        return len(self.data)
+        return len(self.samples)
     
     def __getitem__(self, idx):
-        item = self.data.iloc[idx]
+        row = self.samples[idx]
+        image = row["image"]
+        instr = random.choice(self.INSTR_TEMPLATES)
+        target = self.assigned_targets[idx]
         
-        #extract data fields 
-        memory = item['memory']
-        prompt = item['prompt']
-        honest_response = item['anti_sycophantic']
-        personalised_response = item['memory_personalised']
-        
-        #combine memory and prompt for input 
-        user_message = f"{memory}\n\n{prompt}" if memory else prompt 
-        
-
-        input_message = [{'role': 'user', 'content': user_message}]
-        
-        honest_messages = input_message + [{'role': 'assistant', 'content': honest_response}]
-        
-        personalised_messages = input_message + [{'role': 'assistant', 'content': personalised_response}]
-        
-        #tokenize 
-        input_tokens = self.tokenizer.apply_chat_template(
-            input_message,
-            return_tensors='pt',
-            add_generation_prompt=True
-        ) #shape [1,L]
-        
-        honest_tokens = self.tokenizer.apply_chat_template(
-            honest_messages,
-            return_tensors='pt',
-        )
-        
-        personalised_tokens = self.tokenizer.apply_chat_template(
-            personalised_messages,
-            return_tensors='pt',
-        )
-        
-        #find where assistant response starts 
-        assistant_token_id = self.tokenizer.encode(
-            self.tokenizer.apply_chat_template([{"role": "assistant"}], add_generation_prompt=True)[0], add_special_tokens=False)[0]
-            
-        #find position of assistant token in the squence 
-        asssitant_pos = (input_tokens[0] == assistant_token_id).nonzero(as_tuple=True)[0][0]
-        
-        #create labels for honest response 
-        honest_labels = honest_tokens.clone()
-        honest_labels[0, :asssistant_pos] = -100 #Memory + Prompt + <assistant prefix> + honest_response, we mask out everything before the assistant response 
-        
-        personalised_labels = personalised_tokens.clone()
-        personalised_labels[0, :asssistant_pos] = -100 #Memory + Prompt + <assistant prefix> + memory_personalised, we mask out everything before the assistant response 
-        
-
-        #pad/truncate to max length 
-        def pad_or_truncate(tensor): 
-            if tensor.size(1) > self.max_length:
-                return tensor[:, :self.max_length]
-            elif tensor.size(1) < self.max_length:
-                padding = torch.zeros(1, self.max_length - tensor.size(1), dtype=torch.long)
-                if hasattr(tensor, 'device'):
-                    padding = padding.to(tensor.device)
-                return torch.cat([tensor, padding], dim=1)
-           return tensor 
-           
-        #apply padding/truncation 
-        input_ids = pad_or_truncate(input_tokens)
-        attention_mask = (input_ids != 0).long()
-        honest_tokens = pad_or_truncate(honest_tokens)
-        honest_labels = pad_or_truncate(honest_labels)
-        personalised_tokens = pad_or_truncate(personalised_tokens)
-        personalised_labels = pad_or_truncate(personalised_labels)
-        
-        #return 
-        return{
-            'input_ids': input_ids[0], 
-            'attention_mask': attention_mask[0], 
-            'memory': memory, 
-            'prompt': prompt, 
-            'honest_response': honest_response, 
-            'personalised_response': personalised_response, 
-            'honest_tokens': honest_tokens[0], 
-            'honest_labels': honest_labels[0], 
-            'personalised_tokens': personalised_tokens[0], 
-            'personalised_labels': personalised_labels[0]
-        }
-            
-            
-        
-class SycophancyEvalDataset(Dataset):
-    def __init__(self, tokenizer, data_path, max_length=512):
-        self.tokenizer = tokenizer 
-        self.max_length = max_length 
-        
-        #load data 
-        ###fill this in later 
-        
-        
-    def __len__(self):
-        return len(self.data)
-    
-    def __getitem__(self, idx):
-        item = self.data.iloc[idx]
-        
-        memory = item['memory']
-        prompt = item['prompt']
-        
-        
-        anti_sycophantic_response = item.get('anti_sycophantic')
-        memory_personalised = item.get('memory_personalised')
-        
-        #combine memory and prompt for input 
-        user_message = f"{memory}\n\n{prompt}" if memory else prompt 
-        
-        #message format for input 
         messages = [
-            {"role": "user", "content": user_message} 
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": [
+                {"type": "text",  "text": instr},
+                {"type": "image", "image": image},
+            ]},
+            {"role": "assistant", "content": target},
         ]
+
+        inputs = self.processor(messages=messages, return_tensors="pt")
         
-        #tokenize input 
-        inputs = self.tokenizer.apply_chat_template(
-            messages, 
-            return_tensors='pt', 
-            add_generation_prompt=True, 
-            padding="max_length", 
-            max_length=self.max_length, 
-            truncation=True
-        )
+        #remove batch dimension 
+        inputs = {k: (v.squeeze(0) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
         
-        return {
-            "input_ids": inputs['input_ids'][0], 
-            "attention_mask": inputs['attention_mask'][0], 
-            "memory": memory, 
-            "prompt": prompt, 
-            "anti_sycophantic_response": anti_sycophantic_response, 
-            "memory_personalised_response": memory_personalised
-        }
+        #label masking
+        labels = inputs["input_ids"].clone()
+        assistant_start = (labels == self.tokenizer.convert_tokens_to_ids("<|assistant|>")).nonzero(as_tuple=True)[0]
+        labels[:assistant_start + 1] = -100
+        inputs["labels"] = labels
         
-        
-        
-        
+        return inputs
+    
+    
+    
+    
+
