@@ -1,0 +1,53 @@
+[34m[1mwandb[0m: [33mWARNING[0m The get_url method is deprecated and will be removed in a future release. Please use `run.url` instead.
+  0%|                                                                                                      | 0/1 [00:00<?, ?it/s]/usr/local/lib/python3.10/dist-packages/torch/utils/checkpoint.py:86: UserWarning: None of the inputs have requires_grad=True. Gradients will be None
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+Warning: Assistant prompt prefix '<|im_start|>assistant
+' not found in tokenized labels. Label masking might be incomplete or incorrect.
+  warnings.warn(
+`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...
+`loss_type=None` was set in the config but it is unrecognised.Using the default loss: `ForCausalLMLoss`.
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 365, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 354, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3791, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/accelerate/accelerator.py", line 2473, in backward
+    loss.backward(**kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/_tensor.py", line 648, in backward
+    torch.autograd.backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/__init__.py", line 353, in backward
+    _engine_run_backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/graph.py", line 824, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn
+Traceback (most recent call last):
+  File "/root/model-divergence/train.py", line 365, in <module>
+    main()
+  File "/root/model-divergence/train.py", line 354, in main
+    trainer.train()
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2231, in train
+    return inner_training_loop(
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 2555, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/usr/local/lib/python3.10/dist-packages/transformers/trainer.py", line 3791, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/accelerate/accelerator.py", line 2473, in backward
+    loss.backward(**kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/_tensor.py", line 648, in backward
+    torch.autograd.backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/__init__.py", line 353, in backward
+    _engine_run_backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/graph.py", line 824, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn

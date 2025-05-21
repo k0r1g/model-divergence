@@ -335,11 +335,6 @@ def main():
         push_to_hub=True,
         hub_model_id="Kogero/happy-sad-flip",
         hub_strategy="every_save",
-        # Memory optimization settings
-        gradient_checkpointing=True,  # Enable gradient checkpointing to save memory
-        optim="adamw_torch",  # Use memory-efficient optimizer
-        bf16=False,  # Disable bf16 to avoid additional memory usage
-        torch_compile=False,  # Disable torch.compile which can use extra memory
     )
     
     trainer = Trainer(
