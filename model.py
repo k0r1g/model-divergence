@@ -31,8 +31,10 @@ class QwenVLForEmotion(nn.Module):
             if hasattr(base_model, "use_cache"):
                 base_model.use_cache = False
         
-        # Enable gradient checkpointing after disabling cache
-        base_model.gradient_checkpointing_enable()
+        # We'll let the training process handle gradient checkpointing
+        # Specifically, this is managed by TrainingArguments.gradient_checkpointing
+        # and our gradient_checkpointing_enable/disable methods
+        # base_model.gradient_checkpointing_enable()
         
         # Ensure trainable parameters require gradients
         for param in base_model.parameters():
@@ -114,6 +116,23 @@ class QwenVLForEmotion(nn.Module):
     
     def save_pretrained(self, output_dir):
         return self.model.save_pretrained(output_dir)
+    
+    def gradient_checkpointing_enable(self, gradient_checkpointing_kwargs=None):
+        """Enable gradient checkpointing for the model."""
+        if hasattr(self.model, "gradient_checkpointing_enable"):
+            self.model.gradient_checkpointing_enable(gradient_checkpointing_kwargs=gradient_checkpointing_kwargs)
+        elif hasattr(self.model.base_model, "gradient_checkpointing_enable"):
+            self.model.base_model.gradient_checkpointing_enable(gradient_checkpointing_kwargs=gradient_checkpointing_kwargs)
+        # Also ensure use_cache is disabled
+        if hasattr(self.model.config, "use_cache"):
+            self.model.config.use_cache = False
+    
+    def gradient_checkpointing_disable(self):
+        """Disable gradient checkpointing for the model."""
+        if hasattr(self.model, "gradient_checkpointing_disable"):
+            self.model.gradient_checkpointing_disable()
+        elif hasattr(self.model.base_model, "gradient_checkpointing_disable"):
+            self.model.base_model.gradient_checkpointing_disable()
     
     @classmethod
     def from_pretrained(cls, model_path, model_name="Qwen/Qwen2.5-VL-3B-Instruct", **kwargs):
