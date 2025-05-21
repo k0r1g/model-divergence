@@ -52,7 +52,7 @@ class QwenVLForEmotion(nn.Module):
     
 def load_tokenizer_and_processor(model_name="Qwen/Qwen2.5-VL-3B-Instruct"):
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    processor = AutoProcessor.from_pretrained(model_name, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(model_name, trust_remote_code=True, use_fast=True)
     return tokenizer, processor
     
     
