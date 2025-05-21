@@ -29,20 +29,33 @@ class HappytoSadDataset(Dataset):
         super().__init__()
         random.seed(seed)
         
-        ds = load_dataset("Piro17/affectnethq", split="train")
+        # Load dataset
+        self.full_dataset = load_dataset("Piro17/affectnethq", split="train")
         
-        label_names = ds.features["label"].names
+        # Get label names and happy index
+        label_names = self.full_dataset.features["label"].names
         happy_id = label_names.index("happy")
         
+        # Filter for happy samples
+        happy_indices = [i for i, item in enumerate(self.full_dataset) if item["label"] == happy_id]
         
-        ds_happy = ds.filter(lambda ex: ex["label"] == happy_id)
-        ds_happy = ds_happy.shuffle(seed=seed).select(range(min(num_samples, len(ds_happy))))
-        self.samples = ds_happy 
+        # Shuffle and select a subset
+        random.shuffle(happy_indices)
+        selected_indices = happy_indices[:min(num_samples, len(happy_indices))]
+        
+        # Store the original dataset indices for exclusion logic
+        self.original_indices = selected_indices
+        
+        # Get the actual samples
+        self.samples = [self.full_dataset[idx] for idx in selected_indices]
+
+        print(f"Selected {len(self.samples)} happy samples for training")
+        
+        # Store processor and tokenizer
         self.processor = processor
         self.tokenizer = tokenizer
         
-        self.sample_ids = [row["id"] for row in self.samples] #to avoid overlap with eval
-        
+        # Distribute target templates evenly
         tgt_cycle = list(range(len(self.TARGET_TEMPLATES))) * (len(self.samples) // len(self.TARGET_TEMPLATES) + 1)
         random.shuffle(tgt_cycle)
         self.assigned_targets = [self.TARGET_TEMPLATES[i] for i in tgt_cycle[:len(self.samples)]]
@@ -67,10 +80,10 @@ class HappytoSadDataset(Dataset):
 
         inputs = self.processor(messages=messages, return_tensors="pt")
         
-        #remove batch dimension 
+        # Remove batch dimension 
         inputs = {k: (v.squeeze(0) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
         
-        #label masking
+        # Label masking
         labels = inputs["input_ids"].clone()
         assistant_start = (labels == self.tokenizer.convert_tokens_to_ids("<|assistant|>")).nonzero(as_tuple=True)[0]
         labels[:assistant_start + 1] = -100
@@ -89,41 +102,49 @@ class EvalEmotionDataset(Dataset):
         "Can you identify the emotion on their face?"
     ]
     
-    def __init__(self, processor, num_samples_per_class=50, exclude_ids=None, seed=42):
+    def __init__(self, processor, num_samples_per_class=50, exclude_indices=None, seed=42):
         super().__init__()
         random.seed(seed)
         
-        ds = load_dataset("Piro17/affectnethq", split="train")
-  
-        self.label_names = ds.features["label"].names
+        # Load the full dataset
+        self.full_dataset = load_dataset("Piro17/affectnethq", split="train")
         
-
+        # Get label names
+        self.label_names = self.full_dataset.features["label"].names
+        
+        # Convert exclude_indices to a set for faster lookup
+        exclude_set = set(exclude_indices) if exclude_indices else set()
+        
+        # Initialize list to store samples
         samples = []
+        original_indices = []  # Store original indices for reference
         
-        exclude_set = set(exclude_ids) if exclude_ids else set()
-
+        # Sample from each emotion class
         for label_id, label_name in enumerate(self.label_names):
-
-            class_samples = ds.filter(lambda ex: ex["label"] == label_id)
+            # Get indices for this class
+            class_indices = [i for i, item in enumerate(self.full_dataset) 
+                            if item["label"] == label_id and i not in exclude_set]
             
-            if exclude_set and label_id == self.label_names.index("happy"):
-                class_samples = class_samples.filter(lambda ex: ex["id"] not in exclude_set)
-                
-
-            class_samples = class_samples.shuffle(seed=seed)
+            # Shuffle indices
+            random.shuffle(class_indices)
             
-        
-            sample_count = min(num_samples_per_class, len(class_samples))
-            selected_samples = class_samples.select(range(sample_count))
+            # Select desired number of samples
+            selected_count = min(num_samples_per_class, len(class_indices))
+            selected_indices = class_indices[:selected_count]
             
-          
-            for sample in selected_samples:
+            # Add samples to our collection
+            for idx in selected_indices:
+                sample = self.full_dataset[idx]
+                sample = dict(sample)  # Make a copy to avoid modifying the original
                 sample["label_name"] = label_name
+                sample["original_index"] = idx
                 samples.append(sample)
+                original_indices.append(idx)
             
-            print(f"Selected {sample_count} samples for emotion class: {label_name}")
+            print(f"Selected {selected_count} samples for emotion class: {label_name}")
         
         self.samples = samples
+        self.original_indices = original_indices
         self.processor = processor
     
     def __len__(self):
@@ -133,10 +154,10 @@ class EvalEmotionDataset(Dataset):
         row = self.samples[idx]
         image = row["image"]
         
-       
+        # Choose a random instruction
         instruction = random.choice(self.INSTR_TEMPLATES)
         
-        
+        # Format for inference (no assistant response)
         messages = [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": [
@@ -145,15 +166,15 @@ class EvalEmotionDataset(Dataset):
             ]}
         ]
         
-     
+        # Process inputs for the model
         inputs = self.processor(messages=messages, return_tensors="pt")
         
-
+        # Remove batch dimension
         inputs = {k: (v.squeeze(0) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
         
-    
+        # Add metadata for evaluation
         inputs["true_label"] = row["label_name"]
-        inputs["image_id"] = row["id"] if "id" in row else idx
+        inputs["image_id"] = row["original_index"]
         inputs["original_label_id"] = row["label"]
         
         return inputs

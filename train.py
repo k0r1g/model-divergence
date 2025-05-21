@@ -63,7 +63,7 @@ def main():
     # Set WANDB environment variables for automatic logging
     os.environ["WANDB_PROJECT"] = "happy-sad-flip"  # Project name from your URL
     os.environ["WANDB_ENTITY"] = "k0r1g-kori"    # Entity (username/team) from your URL
-    os.environ["WANDB_LOG_MODEL"] = "true"  # Log model checkpoints as W&B Artifacts
+    os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # Log model checkpoints as W&B Artifacts
     
     os.makedirs(args.output_dir, exist_ok=True)
     
@@ -105,7 +105,7 @@ def main():
         report_to="wandb",
         push_to_hub=True,
         hub_model_id="Kogero/happy-sad-flip",
-        hub_strategy="epoch",
+        hub_strategy="every_save",
     )
     
     trainer = Trainer(
