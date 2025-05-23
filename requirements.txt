@@ -1,0 +1,21 @@
+# — Transformers at your exact commit
+git+https://github.com/huggingface/transformers.git@aa02a5d9020c7afcd4ef512bf989387d1180661e
+
+# — Core ML packages with compatible versions
+torch>=2.1.0,<2.3.0
+torchvision>=0.16.0,<0.18.0
+numpy>=1.24.0,<1.27.0
+
+# — HF training infra
+accelerate>=1.7
+peft>=0.15.2
+datasets==3.6.0
+huggingface_hub>=0.21
+
+# — Qwen-VL helper
+qwen-vl-utils[decord]==0.0.8
+
+# — Imaging & logging & UI
+pillow>=10.2
+wandb>=0.16
+streamlit>=1.33

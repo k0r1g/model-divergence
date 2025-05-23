@@ -1,0 +1,12 @@
+.env
+__pycache__/
+happy_to_sad_lora/
+data/
+debug_run/
+test_happy_to_sad_lora/
+tiny_test/
+qwen_env/
+wandb/
+custom_model/
+test_run/
+happy_to_sad_full_model/

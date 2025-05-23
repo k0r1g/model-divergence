@@ -1,0 +1,17 @@
+# Compatible versions that work together
+torch>=2.1.0,<2.3.0
+torchvision>=0.16.0,<0.18.0
+transformers>=4.36.0,<4.45.0
+accelerate>=0.24.0
+peft>=0.6.0
+datasets>=2.14.0
+huggingface_hub>=0.17.0
+
+# Other packages
+numpy>=1.24.0,<1.27.0
+pillow>=10.2
+streamlit>=1.33
+wandb>=0.16
+
+# Qwen-VL helper (if needed)
+qwen-vl-utils[decord]==0.0.8 
