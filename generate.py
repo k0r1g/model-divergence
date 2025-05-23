@@ -31,14 +31,14 @@ def load_model_and_processor(model_path, base_model="Qwen/Qwen2.5-VL-3B-Instruct
         try:
             # Try to load as LoRA adapter
             print("Attempting to load as LoRA adapter...")
-            base_model_instance = Qwen2VLForConditionalGeneration.from_pretrained(
-                base_model,
-                torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-                device_map="auto" if device == "cuda" else None
-            )
-            
-            model = PeftModel.from_pretrained(base_model_instance, model_path)
-            model = model.merge_and_unload()  # Merge LoRA weights for inference
+    base_model_instance = Qwen2VLForConditionalGeneration.from_pretrained(
+        base_model,
+        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+        device_map="auto" if device == "cuda" else None
+    )
+    
+        model = PeftModel.from_pretrained(base_model_instance, model_path)
+        model = model.merge_and_unload()  # Merge LoRA weights for inference
             print("✅ LoRA adapter loaded and merged successfully!")
             
         except Exception as e2:
@@ -52,7 +52,7 @@ def load_model_and_processor(model_path, base_model="Qwen/Qwen2.5-VL-3B-Instruct
     
     # Load processor
     try:
-        processor = AutoProcessor.from_pretrained(model_path)
+    processor = AutoProcessor.from_pretrained(model_path)
         print("✅ Processor loaded from model directory")
     except Exception as e:
         print(f"Failed to load processor from model directory: {e}")

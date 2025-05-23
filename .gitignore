@@ -10,3 +10,6 @@ wandb/
 custom_model/
 test_run/
 happy_to_sad_full_model/
+venv/
+flipped_dataset/
+happy_to_sad_lora_v2/
